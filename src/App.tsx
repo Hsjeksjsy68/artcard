@@ -144,8 +144,14 @@ export default function App() {
   const filteredCards = cards.filter(card => {
     if (!card.imageUrl) return false;
     
-    const matchesSearch = card.player.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          card.team.toLowerCase().includes(searchQuery.toLowerCase());
+    const player = card.player || '';
+    const team = card.team || '';
+    
+    const matchesSearch = player.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          team.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (card.set || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (card.year || '').toString().includes(searchQuery) ||
+                          (card.position || '').toLowerCase().includes(searchQuery.toLowerCase());
     
     if (activeTab === 'collection') {
       return matchesSearch && collectionIds.has(card.id);

@@ -51,31 +51,31 @@ export function CardModal({ card, isOpen, onClose, inCollection, onToggleCollect
             <div className="w-full md:w-2/5 p-6 md:p-10 bg-neutral-100 flex items-center justify-center border-b-2 md:border-b-0 md:border-r-2 border-black relative overflow-hidden">
               <div className="relative w-full max-w-[280px] aspect-[750/1050] bg-white rounded-none border-2 border-black overflow-hidden flex flex-col transition-colors shadow-2xl">
                 
-                <div className="h-2/3 relative flex items-center justify-center bg-white border-b-2 border-black">
-                  <div className={cn("absolute inset-0 opacity-20 bg-gradient-to-tr", card.imageGradient)}></div>
-                  
-                  {card.imageUrl && (
-                    <div className="absolute inset-0 z-10 p-2">
-                       <img src={card.imageUrl} alt={card.player} className="w-full h-full object-cover grayscale mix-blend-multiply opacity-80" />
+                {card.imageUrl ? (
+                  <img src={card.imageUrl} alt={card.player} className="absolute inset-0 w-full h-full object-cover z-10" />
+                ) : (
+                  <>
+                    <div className="h-2/3 relative flex items-center justify-center bg-white border-b-2 border-black">
+                      <div className={cn("absolute inset-0 opacity-20 bg-gradient-to-tr", card.imageGradient)}></div>
+                      
+                      <div className={cn(
+                          "absolute bottom-2 left-2 px-2 py-1 bg-white border-2 rounded-none text-[10px] font-black uppercase tracking-widest z-20",
+                          card.rarity === 'Base' && "border-black/50 text-black",
+                          card.rarity === 'Silver Refractor' && "border-slate-400 text-slate-600",
+                          card.rarity === 'Gold Autograph' && "border-amber-500 text-amber-600",
+                          card.rarity === '1-of-1 Shield' && "border-[#D4FF00] text-black bg-black"
+                        )}>
+                          {card.rarity.toUpperCase()}
+                      </div>
                     </div>
-                  )}
 
-                  <div className={cn(
-                      "absolute bottom-2 left-2 px-2 py-1 bg-white border-2 rounded-none text-[10px] font-black uppercase tracking-widest z-20",
-                      card.rarity === 'Base' && "border-black/50 text-black",
-                      card.rarity === 'Silver Refractor' && "border-slate-400 text-slate-600",
-                      card.rarity === 'Gold Autograph' && "border-amber-500 text-amber-600",
-                      card.rarity === '1-of-1 Shield' && "border-[#D4FF00] text-black bg-black"
-                    )}>
-                      {card.rarity.toUpperCase()}
-                  </div>
-                </div>
-
-                <div className="p-4 flex-1 flex flex-col justify-end bg-white relative z-10">
-                  <div className="text-[10px] text-neutral-500 font-black uppercase tracking-widest truncate">{card.team} • {card.position}</div>
-                  <div className="text-xl font-black uppercase text-black truncate">{card.player}</div>
-                  <div className="text-[9px] text-neutral-500 font-black uppercase mt-1 tracking-widest truncate">{card.year} {card.set} {card.edition && `• ${card.edition}`}</div>
-                </div>
+                    <div className="p-4 flex-1 flex flex-col justify-end bg-white relative z-10">
+                      <div className="text-[10px] text-neutral-500 font-black uppercase tracking-widest truncate">{card.team} • {card.position}</div>
+                      <div className="text-xl font-black uppercase text-black truncate">{card.player}</div>
+                      <div className="text-[9px] text-neutral-500 font-black uppercase mt-1 tracking-widest truncate">{card.year} {card.set} {card.edition && `• ${card.edition}`}</div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

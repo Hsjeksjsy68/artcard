@@ -7,7 +7,7 @@ import { AdminForm } from './components/AdminForm';
 import { UserAuth } from './components/UserAuth';
 import { FootballCard } from './types';
 import { formatCurrency } from './lib/utils';
-import { db, auth, onAuthStateChanged, collection, getDocs, doc, setDoc, getDoc, User, deleteDoc } from './lib/firebase';
+import { db, auth, onAuthStateChanged, collection, doc, setDoc, getDoc, User, deleteDoc, onSnapshot, getDocs } from './lib/firebase';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'database' | 'collection' | 'admin'>('database');
@@ -25,12 +25,14 @@ export default function App() {
       if (currentUser) {
         // Load user's collection
         const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          setCollectionIds(new Set(userSnap.data().collectionIds || []));
-        } else {
-          setCollectionIds(new Set());
-        }
+        const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+          if (docSnap.exists()) {
+            setCollectionIds(new Set(docSnap.data().collectionIds || []));
+          } else {
+            setCollectionIds(new Set());
+          }
+        });
+        return () => unsubscribeUser();
       } else {
         setCollectionIds(new Set());
       }
@@ -38,25 +40,22 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  const fetchCards = async () => {
+  useEffect(() => {
     setLoadingCards(true);
-    try {
-      const cardsRef = collection(db, 'cards');
-      const snapshot = await getDocs(cardsRef);
+    const cardsRef = collection(db, 'cards');
+    const unsubscribe = onSnapshot(cardsRef, (snapshot) => {
       const loadedCards: FootballCard[] = [];
       snapshot.forEach(doc => {
         loadedCards.push({ id: doc.id, ...doc.data() } as FootballCard);
       });
       setCards(loadedCards);
-    } catch (error) {
-      console.error("Error fetching cards:", error);
-    } finally {
       setLoadingCards(false);
-    }
-  };
+    }, (error) => {
+      console.error("Error fetching cards:", error);
+      setLoadingCards(false);
+    });
 
-  useEffect(() => {
-    fetchCards();
+    return () => unsubscribe();
   }, []);
 
   const saveCollectionToFirebase = async (newCollection: Set<string>) => {
@@ -104,7 +103,6 @@ export default function App() {
       const { id, ...cardData } = newCard;
       const cardRef = doc(collection(db, 'cards'), id);
       await setDoc(cardRef, cardData);
-      setCards(prev => [newCard, ...prev]);
       setActiveTab('database');
       setToastMessage("Card published successfully!");
     } catch (error) {
@@ -132,7 +130,6 @@ export default function App() {
       });
       await Promise.all(addPromises);
       
-      await fetchCards();
       setToastMessage("Database reset successfully.");
       setConfirmReset(false);
     } catch (error) {

@@ -59,11 +59,14 @@ export function AdminForm({ onAdd, totalCards, totalMarketCap }: AdminFormProps)
       edition: formData.edition,
       rarity: formData.rarity,
       cardNumber: formData.cardNumber,
-      imageUrl: imageUrl || undefined,
       imageGradient: gradient,
       priceHistory: history,
       currentPrice: basePrice
     };
+
+    if (imageUrl) {
+      newCard.imageUrl = imageUrl;
+    }
 
     onAdd(newCard);
     

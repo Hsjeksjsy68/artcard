@@ -186,7 +186,7 @@ export default function App() {
               >
                 COLLECTION
               </button>
-              {user?.email === 'grakibg@gmail.com' && (
+              {(user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com') && (
                 <button 
                   onClick={() => setActiveTab('admin')}
                   className={`transition-colors py-2 border-b-4 ${
@@ -230,7 +230,7 @@ export default function App() {
           >
             COLLECTION
           </button>
-          {user?.email === 'grakibg@gmail.com' && (
+          {(user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com') && (
             <button 
               onClick={() => setActiveTab('admin')}
               className={`flex-1 py-3 px-4 text-sm font-black tracking-widest transition-colors uppercase whitespace-nowrap ${
@@ -243,7 +243,7 @@ export default function App() {
         </div>
 
         {activeTab === 'admin' ? (
-          user?.email === 'grakibg@gmail.com' ? (
+          (user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com') ? (
             <div className="max-w-2xl mx-auto space-y-8">
               <AdminForm onAdd={handleAddCard} totalCards={cards.length} totalMarketCap={totalMarketCap} />
               

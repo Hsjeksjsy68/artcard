@@ -3,16 +3,17 @@ import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, updateD
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAIHRF603LdbosZicKCDEJjlAMVrDOY5Bc",
-  authDomain: "gen-lang-client-0720859222.firebaseapp.com",
-  projectId: "gen-lang-client-0720859222",
-  storageBucket: "gen-lang-client-0720859222.firebasestorage.app",
-  messagingSenderId: "57004930038",
-  appId: "1:57004930038:web:3196611881da1fe0ec4dd7"
+  apiKey: "AIzaSyDnVfoN_UGQTd_AGb5Ol5yF0fWiquUbUm8",
+  authDomain: "artcard-5c958.firebaseapp.com",
+  projectId: "artcard-5c958",
+  storageBucket: "artcard-5c958.firebasestorage.app",
+  messagingSenderId: "291167753109",
+  appId: "1:291167753109:web:b63219b0272f7ca1df5c9c",
+  measurementId: "G-4639N5NV7Q"
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app, "ai-studio-artcard-ba26417d-dc2c-4e2a-a3d0-604475c246ba");
+const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 

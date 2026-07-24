@@ -4,7 +4,6 @@ import { cardsDatabase } from './data';
 import { CardItem } from './components/CardItem';
 import { CardModal } from './components/CardModal';
 import { AdminForm } from './components/AdminForm';
-import { LoginForm } from './components/LoginForm';
 import { UserAuth } from './components/UserAuth';
 import { FootballCard } from './types';
 import { formatCurrency } from './lib/utils';
@@ -14,8 +13,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'database' | 'collection' | 'admin'>('database');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCard, setSelectedCard] = useState<FootballCard | null>(null);
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [loginError, setLoginError] = useState('');
   
   const [user, setUser] = useState<User | null>(null);
   const [collectionIds, setCollectionIds] = useState<Set<string>>(new Set());
@@ -147,15 +144,6 @@ export default function App() {
     }
   };
 
-  const handleLogin = (password: string) => {
-    if (password === '7232') {
-      setIsAdminLoggedIn(true);
-      setLoginError('');
-    } else {
-      setLoginError('Invalid Passcode');
-    }
-  };
-
   const filteredCards = cards.filter(card => {
     const matchesSearch = card.player.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           card.team.toLowerCase().includes(searchQuery.toLowerCase());
@@ -198,6 +186,16 @@ export default function App() {
               >
                 COLLECTION
               </button>
+              {user?.email === 'grakibg@gmail.com' && (
+                <button 
+                  onClick={() => setActiveTab('admin')}
+                  className={`transition-colors py-2 border-b-4 ${
+                    activeTab === 'admin' ? 'text-black border-black' : 'border-transparent hover:text-black hover:border-black'
+                  }`}
+                >
+                  ADMIN
+                </button>
+              )}
             </nav>
           </div>
 
@@ -232,10 +230,20 @@ export default function App() {
           >
             COLLECTION
           </button>
+          {user?.email === 'grakibg@gmail.com' && (
+            <button 
+              onClick={() => setActiveTab('admin')}
+              className={`flex-1 py-3 px-4 text-sm font-black tracking-widest transition-colors uppercase whitespace-nowrap ${
+                activeTab === 'admin' ? 'bg-white text-black border-2 border-black' : 'text-neutral-500 border-2 border-transparent'
+              }`}
+            >
+              ADMIN
+            </button>
+          )}
         </div>
 
         {activeTab === 'admin' ? (
-          isAdminLoggedIn ? (
+          user?.email === 'grakibg@gmail.com' ? (
             <div className="max-w-2xl mx-auto space-y-8">
               <AdminForm onAdd={handleAddCard} totalCards={cards.length} totalMarketCap={totalMarketCap} />
               
@@ -257,7 +265,9 @@ export default function App() {
               </div>
             </div>
           ) : (
-            <LoginForm onLogin={handleLogin} error={loginError} />
+            <div className="text-center py-20 font-black tracking-widest text-neutral-500 uppercase">
+               Access Denied
+            </div>
           )
         ) : (
           <>

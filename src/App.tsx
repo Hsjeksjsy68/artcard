@@ -87,7 +87,7 @@ export default function App() {
       return;
     }
     setCollectionIds(prev => {
-      const next = new Set(prev);
+      const next = new Set<string>(prev);
       if (next.has(cardId)) {
         next.delete(cardId);
       } else {
@@ -105,9 +105,9 @@ export default function App() {
       await setDoc(cardRef, cardData);
       setActiveTab('database');
       setToastMessage("Card published successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding card:", error);
-      setToastMessage("Error adding card.");
+      setToastMessage(`Error adding card: ${error.message || String(error)}`);
     }
   };
 
@@ -159,10 +159,11 @@ export default function App() {
     return matchesSearch;
   });
 
-  const collectionValue = Array.from(collectionIds).reduce((total, id) => {
+  let collectionValue = 0;
+  collectionIds.forEach(id => {
     const card = cards.find(c => c.id === id);
-    return total + (card?.currentPrice || 0);
-  }, 0);
+    collectionValue += (card?.currentPrice || 0);
+  });
 
   const totalMarketCap = cards.filter(card => !!card.imageUrl).reduce((total, card) => total + card.currentPrice, 0);
 

@@ -8,6 +8,7 @@ interface CardItemProps {
   card: FootballCard;
   inCollection?: boolean;
   onClick: (card: FootballCard) => void;
+  key?: React.Key;
 }
 
 export function CardItem({ card, inCollection, onClick }: CardItemProps) {

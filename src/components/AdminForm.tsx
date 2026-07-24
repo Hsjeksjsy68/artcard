@@ -201,9 +201,12 @@ export function AdminForm({ onAdd, totalCards, totalMarketCap }: AdminFormProps)
 
           <button 
             type="submit" 
-            className="w-full bg-[#D4FF00] hover:bg-black hover:text-white text-black font-black uppercase tracking-widest py-4 border-2 border-black transition-colors mt-8 text-lg"
+            disabled={!imageUrl}
+            className={`w-full font-black uppercase tracking-widest py-4 border-2 border-black transition-colors mt-8 text-lg ${
+              !imageUrl ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed' : 'bg-[#D4FF00] hover:bg-black hover:text-white text-black'
+            }`}
           >
-            Publish Card to Database
+            {imageUrl ? 'Publish Card to Database' : 'Upload Image to Publish'}
           </button>
         </form>
       </div>

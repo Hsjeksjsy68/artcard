@@ -142,6 +142,8 @@ export default function App() {
   };
 
   const filteredCards = cards.filter(card => {
+    if (!card.imageUrl) return false;
+    
     const matchesSearch = card.player.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           card.team.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -156,7 +158,7 @@ export default function App() {
     return total + (card?.currentPrice || 0);
   }, 0);
 
-  const totalMarketCap = cards.reduce((total, card) => total + card.currentPrice, 0);
+  const totalMarketCap = cards.filter(card => !!card.imageUrl).reduce((total, card) => total + card.currentPrice, 0);
 
   return (
     <div className="min-h-screen bg-white text-black flex flex-col font-sans overflow-hidden selection:bg-[#D4FF00] selection:text-black">
@@ -242,7 +244,7 @@ export default function App() {
         {activeTab === 'admin' ? (
           (user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com') ? (
             <div className="max-w-2xl mx-auto space-y-8">
-              <AdminForm onAdd={handleAddCard} totalCards={cards.length} totalMarketCap={totalMarketCap} />
+              <AdminForm onAdd={handleAddCard} totalCards={cards.filter(c => !!c.imageUrl).length} totalMarketCap={totalMarketCap} />
               
               <div className="bg-white border-2 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
                 <h3 className="text-xl font-black uppercase tracking-tighter text-black mb-4">Danger Zone</h3>

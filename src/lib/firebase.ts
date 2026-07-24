@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "firebase/firestore";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAIHRF603LdbosZicKCDEJjlAMVrDOY5Bc",
@@ -18,5 +18,5 @@ const db = initializeFirestore(app, {
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-export { db, auth, provider, signInWithPopup, signOut, onAuthStateChanged, collection, addDoc, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy };
+export { db, auth, provider, signInWithPopup, signOut, onAuthStateChanged, collection, addDoc, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, createUserWithEmailAndPassword, signInWithEmailAndPassword };
 export type { User };

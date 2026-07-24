@@ -4,13 +4,15 @@ import { cardsDatabase } from './data';
 import { CardItem } from './components/CardItem';
 import { CardModal } from './components/CardModal';
 import { AdminForm } from './components/AdminForm';
+import { ManageShop } from './components/ManageShop';
+import { PackShop } from './components/PackShop';
 import { UserAuth } from './components/UserAuth';
-import { FootballCard } from './types';
+import { FootballCard, Pack } from './types';
 import { formatCurrency } from './lib/utils';
 import { db, auth, onAuthStateChanged, collection, doc, setDoc, getDoc, User, deleteDoc, onSnapshot, getDocs } from './lib/firebase';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'database' | 'collection' | 'admin'>('database');
+  const [activeTab, setActiveTab] = useState<'database' | 'collection' | 'admin' | 'manage' | 'shop'>('database');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCard, setSelectedCard] = useState<FootballCard | null>(null);
   
@@ -18,6 +20,7 @@ export default function App() {
   const [collectionIds, setCollectionIds] = useState<Set<string>>(new Set());
   const [cards, setCards] = useState<FootballCard[]>([]);
   const [loadingCards, setLoadingCards] = useState(true);
+  const [packs, setPacks] = useState<Pack[]>([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -43,7 +46,7 @@ export default function App() {
   useEffect(() => {
     setLoadingCards(true);
     const cardsRef = collection(db, 'cards');
-    const unsubscribe = onSnapshot(cardsRef, (snapshot) => {
+    const unsubscribeCards = onSnapshot(cardsRef, (snapshot) => {
       const loadedCards: FootballCard[] = [];
       snapshot.forEach(doc => {
         loadedCards.push({ id: doc.id, ...doc.data() } as FootballCard);
@@ -55,7 +58,21 @@ export default function App() {
       setLoadingCards(false);
     });
 
-    return () => unsubscribe();
+    const packsRef = collection(db, 'packs');
+    const unsubscribePacks = onSnapshot(packsRef, (snapshot) => {
+      const loadedPacks: Pack[] = [];
+      snapshot.forEach(doc => {
+        loadedPacks.push({ id: doc.id, ...doc.data() } as Pack);
+      });
+      setPacks(loadedPacks);
+    }, (error) => {
+      console.error("Error fetching packs:", error);
+    });
+
+    return () => {
+      unsubscribeCards();
+      unsubscribePacks();
+    };
   }, []);
 
   const saveCollectionToFirebase = async (newCollection: Set<string>) => {
@@ -71,8 +88,24 @@ export default function App() {
     }
   };
 
+  const handleCardsDrawn = (drawnCards: FootballCard[]) => {
+    setCollectionIds(prev => {
+      const next = new Set<string>(prev);
+      let added = false;
+      drawnCards.forEach(c => {
+        if (!next.has(c.id)) {
+          next.add(c.id);
+          added = true;
+        }
+      });
+      if (added) {
+        saveCollectionToFirebase(next);
+      }
+      return next;
+    });
+  };
+
   const [toastMessage, setToastMessage] = useState('');
-  const [confirmReset, setConfirmReset] = useState(false);
 
   useEffect(() => {
     if (toastMessage) {
@@ -111,35 +144,7 @@ export default function App() {
     }
   };
 
-  const handleResetDatabase = async () => {
-    if (!confirmReset) {
-      setConfirmReset(true);
-      return;
-    }
-    try {
-      setLoadingCards(true);
-      // Delete existing cards
-      const snapshot = await getDocs(collection(db, 'cards'));
-      const deletePromises = snapshot.docs.map(d => deleteDoc(d.ref));
-      await Promise.all(deletePromises);
 
-      // Add default cards
-      const addPromises = cardsDatabase.map(card => {
-        const { id, ...cardData } = card;
-        return setDoc(doc(db, 'cards', id), cardData);
-      });
-      await Promise.all(addPromises);
-      
-      setToastMessage("Database reset successfully.");
-      setConfirmReset(false);
-    } catch (error) {
-      console.error("Error resetting database:", error);
-      setToastMessage("Failed to reset database.");
-      setConfirmReset(false);
-    } finally {
-      setLoadingCards(false);
-    }
-  };
 
   const filteredCards = cards.filter(card => {
     if (!card.imageUrl) return false;
@@ -192,15 +197,33 @@ export default function App() {
               >
                 COLLECTION
               </button>
-              {(user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com') && (
-                <button 
-                  onClick={() => setActiveTab('admin')}
-                  className={`transition-colors py-2 border-b-4 ${
-                    activeTab === 'admin' ? 'text-black border-black' : 'border-transparent hover:text-black hover:border-black'
-                  }`}
-                >
-                  ADMIN
-                </button>
+              <button 
+                onClick={() => setActiveTab('shop')}
+                className={`transition-colors py-2 border-b-4 ${
+                  activeTab === 'shop' ? 'text-black border-black' : 'border-transparent hover:text-black hover:border-black'
+                }`}
+              >
+                SHOP
+              </button>
+              {(user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com' || user?.email === '1@1.com') && (
+                <>
+                  <button 
+                    onClick={() => setActiveTab('admin')}
+                    className={`transition-colors py-2 border-b-4 ${
+                      activeTab === 'admin' ? 'text-black border-black' : 'border-transparent hover:text-black hover:border-black'
+                    }`}
+                  >
+                    ADD CARD
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('manage')}
+                    className={`transition-colors py-2 border-b-4 ${
+                      activeTab === 'manage' ? 'text-black border-black' : 'border-transparent hover:text-black hover:border-black'
+                    }`}
+                  >
+                    MANAGE SHOP
+                  </button>
+                </>
               )}
             </nav>
           </div>
@@ -236,45 +259,56 @@ export default function App() {
           >
             COLLECTION
           </button>
-          {(user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com') && (
-            <button 
-              onClick={() => setActiveTab('admin')}
-              className={`flex-1 py-3 px-4 text-sm font-black tracking-widest transition-colors uppercase whitespace-nowrap ${
-                activeTab === 'admin' ? 'bg-white text-black border-2 border-black' : 'text-neutral-500 border-2 border-transparent'
-              }`}
-            >
-              ADMIN
-            </button>
+          <button 
+            onClick={() => setActiveTab('shop')}
+            className={`flex-1 py-3 px-4 text-sm font-black tracking-widest transition-colors uppercase whitespace-nowrap ${
+              activeTab === 'shop' ? 'bg-white text-black border-2 border-black' : 'text-neutral-500 border-2 border-transparent'
+            }`}
+          >
+            SHOP
+          </button>
+          {(user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com' || user?.email === '1@1.com') && (
+            <>
+              <button 
+                onClick={() => setActiveTab('admin')}
+                className={`flex-1 py-3 px-4 text-sm font-black tracking-widest transition-colors uppercase whitespace-nowrap ${
+                  activeTab === 'admin' ? 'bg-white text-black border-2 border-black' : 'text-neutral-500 border-2 border-transparent'
+                }`}
+              >
+                ADD CARD
+              </button>
+              <button 
+                onClick={() => setActiveTab('manage')}
+                className={`flex-1 py-3 px-4 text-sm font-black tracking-widest transition-colors uppercase whitespace-nowrap ${
+                  activeTab === 'manage' ? 'bg-white text-black border-2 border-black' : 'text-neutral-500 border-2 border-transparent'
+                }`}
+              >
+                MANAGE SHOP
+              </button>
+            </>
           )}
         </div>
 
         {activeTab === 'admin' ? (
-          (user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com') ? (
+          (user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com' || user?.email === '1@1.com') ? (
             <div className="max-w-2xl mx-auto space-y-8">
               <AdminForm onAdd={handleAddCard} totalCards={cards.filter(c => !!c.imageUrl).length} totalMarketCap={totalMarketCap} />
-              
-              <div className="bg-white border-2 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                <h3 className="text-xl font-black uppercase tracking-tighter text-black mb-4">Danger Zone</h3>
-                <p className="text-neutral-500 text-xs font-black uppercase tracking-widest mb-6">
-                  Resetting the database will delete all custom cards and restore the default dataset.
-                </p>
-                <button 
-                  onClick={handleResetDatabase}
-                  disabled={loadingCards}
-                  className={`w-full font-black uppercase tracking-widest py-4 border-2 border-black transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
-                    confirmReset ? 'bg-black text-white hover:bg-neutral-800' : 'bg-red-500 hover:bg-red-600 text-white'
-                  }`}
-                >
-                  <RefreshCw size={20} className={loadingCards ? 'animate-spin' : ''} />
-                  {confirmReset ? 'ARE YOU SURE? CLICK AGAIN' : 'Reset Database'}
-                </button>
-              </div>
             </div>
           ) : (
             <div className="text-center py-20 font-black tracking-widest text-neutral-500 uppercase">
                Access Denied
             </div>
           )
+        ) : activeTab === 'manage' ? (
+          (user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com' || user?.email === '1@1.com') ? (
+            <ManageShop cards={cards} packs={packs} />
+          ) : (
+            <div className="text-center py-20 font-black tracking-widest text-neutral-500 uppercase">
+               Access Denied
+            </div>
+          )
+        ) : activeTab === 'shop' ? (
+          <PackShop cards={cards} packs={packs} onCardsDrawn={handleCardsDrawn} />
         ) : (
           <>
             {/* Search Bar */}

@@ -5,6 +5,15 @@ export interface PricePoint {
   price: number;
 }
 
+export interface Pack {
+  id: string;
+  name: string;
+  size: number;
+  price: number;
+  color: string;
+  coverPhotoUrl?: string;
+}
+
 export interface FootballCard {
   id: string;
   player: string;

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FootballCard, Pack } from '../types';
-import { Edit2, Trash2, X, Check, Search, Plus, Image as ImageIcon } from 'lucide-react';
-import { db, doc, deleteDoc, updateDoc, setDoc } from '../lib/firebase';
+import { Edit2, Trash2, X, Check, Search, Plus, Image as ImageIcon, AlertTriangle } from 'lucide-react';
+import { db, doc, deleteDoc, updateDoc, setDoc, collection, getDocs } from '../lib/firebase';
 import { formatCurrency } from '../lib/utils';
+import { cardsDatabase } from '../data';
 
 interface ManageShopProps {
   cards: FootballCard[];
@@ -21,6 +22,9 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
   // Packs State
   const [editingPack, setEditingPack] = useState<Pack | null>(null);
   const [packEditForm, setPackEditForm] = useState<Partial<Pack>>({});
+  
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const filteredCards = cards.filter(card => 
     (card.player || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -59,7 +63,21 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
     setIsSaving(true);
     try {
       const cardRef = doc(db, "cards", editingCard.id);
-      await updateDoc(cardRef, editForm);
+      const updatedForm = { ...editForm };
+      updatedForm.currentPrice = Number(updatedForm.currentPrice);
+      updatedForm.year = Number(updatedForm.year);
+      
+      if (updatedForm.currentPrice !== editingCard.currentPrice) {
+        const newHistory = [...(updatedForm.priceHistory || [])];
+        const nowIso = new Date().toISOString();
+        newHistory.push({
+          date: nowIso,
+          price: updatedForm.currentPrice
+        });
+        updatedForm.priceHistory = newHistory;
+      }
+      
+      await updateDoc(cardRef, updatedForm);
       setEditingCard(null);
     } catch (error) {
       console.error("Error updating card:", error);
@@ -134,14 +152,107 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPackEditForm(prev => ({ ...prev, coverPhotoUrl: reader.result as string }));
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          const MAX_WIDTH = 750;
+          const MAX_HEIGHT = 1050;
+          
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          setPackEditForm(prev => ({ ...prev, coverPhotoUrl: compressedDataUrl }));
+        };
+        img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handleResetDatabase = async () => {
+    if (!confirmReset) {
+      setConfirmReset(true);
+      return;
+    }
+    
+    setIsResetting(true);
+    try {
+      // 1. Delete all cards
+      const cardsSnap = await getDocs(collection(db, 'cards'));
+      const cardDeletes = cardsSnap.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(cardDeletes);
+      
+      // 2. Insert default cards
+      const cardAdds = cardsDatabase.map(card => {
+        const { id, ...cardData } = card;
+        return setDoc(doc(db, 'cards', id), cardData);
+      });
+      await Promise.all(cardAdds);
+      
+      // 3. Delete all packs
+      const packsSnap = await getDocs(collection(db, 'packs'));
+      const packDeletes = packsSnap.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(packDeletes);
+      
+      // 4. Insert default packs
+      const defaultPacks = [
+        { id: 'standard', name: 'Standard Pack', price: 10, size: 5, color: 'bg-neutral-100', probability: { base: 0.8, silver: 0.15, gold: 0.04, shield: 0.01 } },
+        { id: 'premium', name: 'Premium Pack', price: 25, size: 5, color: 'bg-neutral-200', probability: { base: 0.6, silver: 0.25, gold: 0.1, shield: 0.05 } },
+        { id: 'elite', name: 'Elite Pack', price: 100, size: 3, color: 'bg-black text-white', probability: { base: 0.3, silver: 0.4, gold: 0.2, shield: 0.1 } }
+      ];
+      const packAdds = defaultPacks.map(pack => setDoc(doc(db, 'packs', pack.id), pack));
+      await Promise.all(packAdds);
+      
+      alert("Database reset successfully.");
+      setConfirmReset(false);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to reset database.");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
+      <div className="bg-red-50 border-2 border-red-500 p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-[8px_8px_0px_0px_rgba(239,68,68,1)]">
+        <div>
+          <h3 className="text-xl font-black text-red-600 uppercase tracking-tighter flex items-center gap-2">
+            <AlertTriangle size={24} /> Danger Zone
+          </h3>
+          <p className="text-red-700 font-bold text-sm tracking-widest uppercase mt-2">
+            Reset database to default demo data. This removes all custom cards and packs. Users are not affected.
+          </p>
+        </div>
+        <button
+          onClick={handleResetDatabase}
+          disabled={isResetting}
+          className={`shrink-0 px-6 py-3 font-black uppercase tracking-widest border-2 border-red-600 transition-colors ${
+            confirmReset ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-white text-red-600 hover:bg-red-50'
+          }`}
+        >
+          {isResetting ? 'Resetting...' : confirmReset ? 'Are you sure?' : 'Reset Database'}
+        </button>
+      </div>
+
       <div className="bg-white border-2 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-b-2 border-black pb-6">
           <h2 className="text-3xl font-black uppercase tracking-tighter">Shop Admin Panel</h2>
@@ -256,9 +367,9 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
               {currentPacks.map(pack => (
                 <div key={pack.id} className={`${pack.color} border-4 border-black p-6 flex flex-col items-center text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`}>
                   {pack.coverPhotoUrl ? (
-                    <img src={pack.coverPhotoUrl} alt={pack.name} className="w-32 h-32 object-cover mb-4 border-2 border-black bg-white" />
+                    <img src={pack.coverPhotoUrl} alt={pack.name} className="w-32 aspect-[750/1050] object-cover mb-4 border-2 border-black bg-white" />
                   ) : (
-                    <div className="w-32 h-32 bg-neutral-200 border-2 border-black mb-4 flex items-center justify-center">
+                    <div className="w-32 aspect-[750/1050] bg-neutral-200 border-2 border-black mb-4 flex items-center justify-center">
                       <ImageIcon size={32} className="text-neutral-400" />
                     </div>
                   )}
@@ -367,9 +478,9 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
                   <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Cover Photo</label>
                   <div className="flex items-center gap-4">
                     {packEditForm.coverPhotoUrl ? (
-                      <img src={packEditForm.coverPhotoUrl} alt="Preview" className="w-24 h-24 object-cover border-2 border-black" />
+                      <img src={packEditForm.coverPhotoUrl} alt="Preview" className="w-16 aspect-[750/1050] object-cover border-2 border-black" />
                     ) : (
-                      <div className="w-24 h-24 border-2 border-black bg-neutral-100 flex items-center justify-center">
+                      <div className="w-16 aspect-[750/1050] border-2 border-black bg-neutral-100 flex items-center justify-center">
                         <ImageIcon className="text-neutral-400" />
                       </div>
                     )}

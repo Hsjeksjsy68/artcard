@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -17,17 +17,36 @@ interface PriceChartProps {
 }
 
 export function PriceChart({ data }: PriceChartProps) {
-  const isPositive = data.length > 1 && data[data.length - 1].price >= data[0].price;
+  const isPositive = data.length > 1 ? data[data.length - 1].price >= data[0].price : true;
   const strokeColor = isPositive ? '#000000' : '#ef4444'; // Black or red
+  const fillColor = isPositive ? '#D4FF00' : '#fee2e2';
+
+  // If there's only one point, duplicate it to draw a flat line
+  const chartData = data.length === 1 ? [
+    { ...data[0], date: new Date(new Date(data[0].date).getTime() - 24 * 60 * 60 * 1000).toISOString() },
+    data[0]
+  ] : data;
 
   return (
     <div className="h-[250px] w-full mt-4 font-sans font-black">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="0" stroke="#e5e5e5" vertical={false} strokeWidth={2} />
+        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <defs>
+            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={fillColor} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={fillColor} stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="4 4" stroke="#e5e5e5" vertical={false} strokeWidth={1} />
           <XAxis 
             dataKey="date" 
-            tickFormatter={(tick) => format(parseISO(tick), 'MMM d').toUpperCase()}
+            tickFormatter={(tick) => {
+              try {
+                return format(parseISO(tick), 'MMM d, h:mm a').toUpperCase();
+              } catch (e) {
+                return tick;
+              }
+            }}
             stroke="#a3a3a3" 
             fontSize={10}
             tickMargin={12}
@@ -41,23 +60,31 @@ export function PriceChart({ data }: PriceChartProps) {
             tickFormatter={(value) => `৳${value}`}
             axisLine={{ stroke: '#000000', strokeWidth: 2 }}
             tickLine={{ stroke: '#000000', strokeWidth: 2 }}
+            domain={['auto', 'auto']}
           />
           <Tooltip 
             contentStyle={{ backgroundColor: '#fff', borderColor: '#000', borderWidth: '2px', borderRadius: '0px', color: '#000', padding: '12px' }}
             itemStyle={{ color: strokeColor, fontWeight: '900', fontSize: '16px' }}
             labelStyle={{ color: '#737373', marginBottom: '8px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '900' }}
             formatter={(value: number) => [formatCurrency(value), 'PRICE']}
-            labelFormatter={(label) => format(parseISO(label as string), 'MMM d, yyyy').toUpperCase()}
+            labelFormatter={(label) => {
+              try {
+                return format(parseISO(label as string), 'MMM d, yyyy h:mm a').toUpperCase();
+              } catch (e) {
+                return label;
+              }
+            }}
           />
-          <Line 
-            type="stepAfter" 
+          <Area 
+            type="monotone" 
             dataKey="price" 
             stroke={strokeColor} 
             strokeWidth={3} 
-            dot={false}
+            fillOpacity={1} 
+            fill="url(#colorPrice)"
             activeDot={{ r: 6, fill: strokeColor, stroke: '#fff', strokeWidth: 3 }}
           />
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );

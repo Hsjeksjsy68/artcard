@@ -32,8 +32,7 @@ export function PackShop({ cards, packs }: PackShopProps) {
   const displayPacks = packs.length > 0 ? packs : defaultPacks;
 
   const handleOrderClick = (pack: Pack) => {
-    setSelectedPack(pack);
-    setOrderState('form');
+    window.open("https://primestock-nu.vercel.app/brand/LpPWLHDoAbhRcgREFFpwgOizU8B3", "_blank");
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,9 +79,11 @@ export function PackShop({ cards, packs }: PackShopProps) {
             onClick={() => handleOrderClick(pack)}
           >
             {pack.coverPhotoUrl ? (
-              <img src={pack.coverPhotoUrl} alt={pack.name} className="w-48 h-48 object-cover mb-6 border-2 border-black group-hover:scale-105 transition-transform bg-white" />
+              <img src={pack.coverPhotoUrl} alt={pack.name} className="w-48 aspect-[750/1050] object-cover mb-6 border-2 border-black group-hover:scale-105 transition-transform bg-white" />
             ) : (
-              <PackageOpen size={64} className={`mb-6 ${pack.color?.includes('bg-black') ? 'text-white' : pack.id === 'elite' ? 'text-[#D4FF00]' : 'text-black'}`} />
+              <div className="w-48 aspect-[750/1050] bg-neutral-200 border-2 border-black mb-6 flex flex-col items-center justify-center group-hover:scale-105 transition-transform">
+                <PackageOpen size={48} className={`mb-2 ${pack.color?.includes('bg-black') ? 'text-white' : pack.id === 'elite' ? 'text-[#D4FF00]' : 'text-black'}`} />
+              </div>
             )}
             <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">{pack.name}</h3>
             <p className={`text-sm font-black uppercase tracking-widest mb-8 opacity-80`}>
@@ -95,7 +96,7 @@ export function PackShop({ cards, packs }: PackShopProps) {
                   : 'bg-black text-white hover:bg-[#D4FF00] hover:text-black border-black'
               } transition-colors`}
             >
-              ORDER (${pack.price.toFixed(2)})
+              ORDER
             </button>
           </div>
         ))}
@@ -124,7 +125,7 @@ export function PackShop({ cards, packs }: PackShopProps) {
                   <>
                     <div className="mb-8 border-b-2 border-black pb-6 flex items-center gap-6">
                       {selectedPack.coverPhotoUrl && (
-                        <img src={selectedPack.coverPhotoUrl} alt={selectedPack.name} className="w-24 h-24 object-cover border-2 border-black" />
+                        <img src={selectedPack.coverPhotoUrl} alt={selectedPack.name} className="w-16 aspect-[750/1050] object-cover border-2 border-black" />
                       )}
                       <div>
                         <h2 className="text-3xl font-black uppercase tracking-tighter mb-2">Checkout</h2>

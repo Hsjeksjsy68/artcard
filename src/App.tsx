@@ -14,6 +14,10 @@ import { db, auth, onAuthStateChanged, collection, doc, setDoc, getDoc, User, de
 export default function App() {
   const [activeTab, setActiveTab] = useState<'database' | 'collection' | 'admin' | 'manage' | 'shop'>('database');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterTeam, setFilterTeam] = useState('');
+  const [filterPosition, setFilterPosition] = useState('');
+  const [filterRarity, setFilterRarity] = useState('');
+  const [filterEdition, setFilterEdition] = useState('');
   const [selectedCard, setSelectedCard] = useState<FootballCard | null>(null);
   
   const [user, setUser] = useState<User | null>(null);
@@ -158,10 +162,17 @@ export default function App() {
                           (card.year || '').toString().includes(searchQuery) ||
                           (card.position || '').toLowerCase().includes(searchQuery.toLowerCase());
     
+    const matchesTeam = filterTeam ? card.team === filterTeam : true;
+    const matchesPosition = filterPosition ? card.position === filterPosition : true;
+    const matchesRarity = filterRarity ? card.rarity === filterRarity : true;
+    const matchesEdition = filterEdition ? card.edition === filterEdition : true;
+    
+    const allMatches = matchesSearch && matchesTeam && matchesPosition && matchesRarity && matchesEdition;
+
     if (activeTab === 'collection') {
-      return matchesSearch && collectionIds.has(card.id);
+      return allMatches && collectionIds.has(card.id);
     }
-    return matchesSearch;
+    return allMatches;
   });
 
   let collectionValue = 0;
@@ -171,6 +182,11 @@ export default function App() {
   });
 
   const totalMarketCap = cards.filter(card => !!card.imageUrl).reduce((total, card) => total + card.currentPrice, 0);
+
+  const uniqueTeams = Array.from(new Set(cards.map(c => c.team).filter(Boolean))).sort();
+  const uniquePositions = Array.from(new Set(cards.map(c => c.position).filter(Boolean))).sort();
+  const uniqueRarities = Array.from(new Set(cards.map(c => c.rarity).filter(Boolean))).sort();
+  const uniqueEditions = Array.from(new Set(cards.map(c => c.edition).filter(Boolean))).sort();
 
   return (
     <div className="min-h-screen bg-white text-black flex flex-col font-sans overflow-hidden selection:bg-[#D4FF00] selection:text-black">
@@ -195,7 +211,7 @@ export default function App() {
                   activeTab === 'collection' ? 'text-black border-black' : 'border-transparent hover:text-black hover:border-black'
                 }`}
               >
-                COLLECTION
+                FAVORITES
               </button>
               <button 
                 onClick={() => setActiveTab('shop')}
@@ -257,7 +273,7 @@ export default function App() {
               activeTab === 'collection' ? 'bg-white text-black border-2 border-black' : 'text-neutral-500 border-2 border-transparent'
             }`}
           >
-            COLLECTION
+            FAVORITES
           </button>
           <button 
             onClick={() => setActiveTab('shop')}
@@ -311,25 +327,61 @@ export default function App() {
           <PackShop cards={cards} packs={packs} onCardsDrawn={handleCardsDrawn} />
         ) : (
           <>
-            {/* Search Bar */}
-            <div className="relative mb-10 max-w-2xl">
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Search size={20} className="text-black" />
+            {/* Search and Filters */}
+            <div className="mb-10 space-y-4 max-w-4xl">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <Search size={20} className="text-black" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="SEARCH PLAYERS, TEAMS..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white border-2 border-black rounded-none py-4 pl-12 pr-4 text-sm font-black text-black placeholder-neutral-500 focus:outline-none focus:ring-4 focus:ring-[#D4FF00]/50 transition-colors uppercase tracking-widest"
+                />
               </div>
-              <input
-                type="text"
-                placeholder="SEARCH PLAYERS, TEAMS..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border-2 border-black rounded-none py-4 pl-12 pr-4 text-sm font-black text-black placeholder-neutral-500 focus:outline-none focus:ring-4 focus:ring-[#D4FF00]/50 transition-colors uppercase tracking-widest"
-              />
+              <div className="flex flex-wrap gap-4">
+                <select 
+                  value={filterTeam} 
+                  onChange={(e) => setFilterTeam(e.target.value)}
+                  className="bg-white border-2 border-black p-2 text-xs font-black uppercase tracking-widest focus:outline-none focus:bg-[#D4FF00]"
+                >
+                  <option value="">ALL TEAMS</option>
+                  {uniqueTeams.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <select 
+                  value={filterPosition} 
+                  onChange={(e) => setFilterPosition(e.target.value)}
+                  className="bg-white border-2 border-black p-2 text-xs font-black uppercase tracking-widest focus:outline-none focus:bg-[#D4FF00]"
+                >
+                  <option value="">ALL POSITIONS</option>
+                  {uniquePositions.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <select 
+                  value={filterRarity} 
+                  onChange={(e) => setFilterRarity(e.target.value)}
+                  className="bg-white border-2 border-black p-2 text-xs font-black uppercase tracking-widest focus:outline-none focus:bg-[#D4FF00]"
+                >
+                  <option value="">ALL RARITIES</option>
+                  {uniqueRarities.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+                <select 
+                  value={filterEdition} 
+                  onChange={(e) => setFilterEdition(e.target.value)}
+                  className="bg-white border-2 border-black p-2 text-xs font-black uppercase tracking-widest focus:outline-none focus:bg-[#D4FF00]"
+                >
+                  <option value="">ALL EDITIONS</option>
+                  {uniqueEditions.map(e => <option key={e} value={e}>{e}</option>)}
+                </select>
+              </div>
             </div>
 
             {/* Tab Header Info */}
             <div className="mb-10 flex items-end justify-between border-b-2 border-black pb-6">
               <div>
                 <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-black">
-                  {activeTab === 'database' ? 'CARD DATABASE' : 'MY COLLECTION'}
+                  {activeTab === 'database' ? 'CARD DATABASE' : 'MY FAVORITES'}
                 </h1>
                 <p className="text-neutral-500 mt-4 text-xs font-black uppercase tracking-widest">
                   {activeTab === 'database' 

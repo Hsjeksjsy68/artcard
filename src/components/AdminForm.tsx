@@ -14,12 +14,12 @@ export function AdminForm({ onAdd, totalCards, totalMarketCap }: AdminFormProps)
     player: '',
     team: '',
     position: '',
-    year: new Date().getFullYear().toString(),
+    year: '',
     set: '',
-    edition: '1st Edition',
+    edition: '',
     rarity: 'Base' as Rarity,
     cardNumber: '',
-    currentPrice: '1000'
+    currentPrice: ''
   });
   
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -33,15 +33,11 @@ export function AdminForm({ onAdd, totalCards, totalMarketCap }: AdminFormProps)
     const basePrice = Number(formData.currentPrice);
     const now = new Date();
     
-    for (let i = 24; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i * 7);
-      history.push({
-        date: date.toISOString().split('T')[0],
-        price: basePrice * (0.8 + Math.random() * 0.4) // Random variation
-      });
-    }
-    history[history.length - 1].price = basePrice; // Ensure current price matches
+    // Add only the initial price
+    history.push({
+      date: now.toISOString(),
+      price: basePrice
+    });
 
     // Determine gradient based on rarity
     let gradient = 'from-zinc-300 via-gray-400 to-zinc-300';
@@ -75,12 +71,12 @@ export function AdminForm({ onAdd, totalCards, totalMarketCap }: AdminFormProps)
       player: '',
       team: '',
       position: '',
-      year: new Date().getFullYear().toString(),
+      year: '',
       set: '',
-      edition: '1st Edition',
+      edition: '',
       rarity: 'Base',
       cardNumber: '',
-      currentPrice: '1000'
+      currentPrice: ''
     });
     setImageUrl('');
   };
@@ -156,7 +152,7 @@ export function AdminForm({ onAdd, totalCards, totalMarketCap }: AdminFormProps)
           Add New Card
         </h2>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
           
           {/* Image Upload Area */}
           <div>

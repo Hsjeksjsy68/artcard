@@ -19,6 +19,12 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [filterTeam, setFilterTeam] = useState('');
+  const [filterPosition, setFilterPosition] = useState('');
+  const [filterYear, setFilterYear] = useState('');
+  const [filterSet, setFilterSet] = useState('');
+  const [filterRarity, setFilterRarity] = useState('');
+
   // Packs State
   const [editingPack, setEditingPack] = useState<Pack | null>(null);
   const [packEditForm, setPackEditForm] = useState<Partial<Pack>>({});
@@ -26,11 +32,25 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
-  const filteredCards = cards.filter(card => 
-    (card.player || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (card.team || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (card.set || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const uniqueTeams = Array.from(new Set(cards.map(c => c.team).filter(Boolean))).sort();
+  const uniquePositions = Array.from(new Set(cards.map(c => c.position).filter(Boolean))).sort();
+  const uniqueYears = Array.from(new Set(cards.map(c => c.year).filter(Boolean))).sort((a, b) => b - a);
+  const uniqueSets = Array.from(new Set(cards.map(c => c.set).filter(Boolean))).sort();
+  const uniqueRarities = Array.from(new Set(cards.map(c => c.rarity).filter(Boolean))).sort();
+
+  const filteredCards = cards.filter(card => {
+    const matchesSearch = (card.player || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (card.team || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (card.set || '').toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesTeam = filterTeam ? card.team === filterTeam : true;
+    const matchesPosition = filterPosition ? card.position === filterPosition : true;
+    const matchesYear = filterYear ? card.year?.toString() === filterYear : true;
+    const matchesSet = filterSet ? card.set === filterSet : true;
+    const matchesRarity = filterRarity ? card.rarity === filterRarity : true;
+
+    return matchesSearch && matchesTeam && matchesPosition && matchesYear && matchesSet && matchesRarity;
+  });
 
   // Default packs if none exist
   const defaultPacks: Pack[] = [
@@ -278,19 +298,63 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
         
         {activeTab === 'cards' && (
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-              <h3 className="text-xl font-black uppercase tracking-widest">Manage Inventory</h3>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <Search size={16} className="text-neutral-500" />
+            <div className="flex flex-col mb-6 gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 className="text-xl font-black uppercase tracking-widest">Manage Inventory</h3>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                    <Search size={16} className="text-neutral-500" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="SEARCH CARDS..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full sm:w-64 bg-neutral-100 border-2 border-black py-2 pl-10 pr-4 text-xs font-black text-black placeholder-neutral-500 focus:outline-none focus:bg-white transition-colors uppercase tracking-widest"
+                  />
                 </div>
-                <input
-                  type="text"
-                  placeholder="SEARCH CARDS..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-64 bg-neutral-100 border-2 border-black py-2 pl-10 pr-4 text-xs font-black text-black placeholder-neutral-500 focus:outline-none focus:bg-white transition-colors uppercase tracking-widest"
-                />
+              </div>
+              <div className="flex flex-wrap gap-4">
+                <select 
+                  value={filterTeam} 
+                  onChange={(e) => setFilterTeam(e.target.value)}
+                  className="bg-neutral-100 border-2 border-black py-2 px-4 text-xs font-black text-black focus:outline-none focus:bg-white transition-colors uppercase tracking-widest"
+                >
+                  <option value="">ALL TEAMS</option>
+                  {uniqueTeams.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <select 
+                  value={filterPosition} 
+                  onChange={(e) => setFilterPosition(e.target.value)}
+                  className="bg-neutral-100 border-2 border-black py-2 px-4 text-xs font-black text-black focus:outline-none focus:bg-white transition-colors uppercase tracking-widest"
+                >
+                  <option value="">ALL POSITIONS</option>
+                  {uniquePositions.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <select 
+                  value={filterYear} 
+                  onChange={(e) => setFilterYear(e.target.value)}
+                  className="bg-neutral-100 border-2 border-black py-2 px-4 text-xs font-black text-black focus:outline-none focus:bg-white transition-colors uppercase tracking-widest"
+                >
+                  <option value="">ALL YEARS</option>
+                  {uniqueYears.map(y => <option key={y} value={y.toString()}>{y}</option>)}
+                </select>
+                <select 
+                  value={filterSet} 
+                  onChange={(e) => setFilterSet(e.target.value)}
+                  className="bg-neutral-100 border-2 border-black py-2 px-4 text-xs font-black text-black focus:outline-none focus:bg-white transition-colors uppercase tracking-widest"
+                >
+                  <option value="">ALL SETS</option>
+                  {uniqueSets.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <select 
+                  value={filterRarity} 
+                  onChange={(e) => setFilterRarity(e.target.value)}
+                  className="bg-neutral-100 border-2 border-black py-2 px-4 text-xs font-black text-black focus:outline-none focus:bg-white transition-colors uppercase tracking-widest"
+                >
+                  <option value="">ALL RARITIES</option>
+                  {uniqueRarities.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
               </div>
             </div>
             

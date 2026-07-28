@@ -189,7 +189,7 @@ export default function App() {
   const uniqueEditions = Array.from(new Set(cards.map(c => c.edition).filter(Boolean))).sort();
 
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col font-sans overflow-hidden selection:bg-[#D4FF00] selection:text-black">
+    <div className="min-h-screen bg-white text-black flex flex-col font-sans uppercase overflow-hidden selection:bg-[#D4FF00] selection:text-black">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white border-b-2 border-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">

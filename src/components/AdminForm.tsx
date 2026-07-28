@@ -7,9 +7,17 @@ interface AdminFormProps {
   onAdd: (card: FootballCard) => void;
   totalCards: number;
   totalMarketCap: number;
+  existingCards: FootballCard[];
 }
 
-export function AdminForm({ onAdd, totalCards, totalMarketCap }: AdminFormProps) {
+export function AdminForm({ onAdd, totalCards, totalMarketCap, existingCards }: AdminFormProps) {
+  const uniqueTeams = Array.from(new Set(existingCards.map(c => c.team).filter(Boolean))).sort();
+  const uniquePositions = Array.from(new Set(existingCards.map(c => c.position).filter(Boolean))).sort();
+  const uniqueYears = Array.from(new Set(existingCards.map(c => c.year).filter(Boolean))).sort((a, b) => b - a);
+  const uniqueSets = Array.from(new Set(existingCards.map(c => c.set).filter(Boolean))).sort();
+  const uniqueEditions = Array.from(new Set(existingCards.map(c => c.edition).filter(Boolean))).sort();
+  const uniqueCardNumbers = Array.from(new Set(existingCards.map(c => c.cardNumber).filter(Boolean))).sort();
+
   const [formData, setFormData] = useState({
     player: '',
     team: '',
@@ -186,30 +194,47 @@ export function AdminForm({ onAdd, totalCards, totalMarketCap }: AdminFormProps)
             </div>
             <div>
               <label className={labelClasses}>Team</label>
-              <input required type="text" name="team" value={formData.team} onChange={handleChange} className={inputClasses} placeholder="MIAMI FC" />
+              <input required type="text" list="teams-list" name="team" value={formData.team} onChange={handleChange} className={inputClasses} placeholder="MIAMI FC" />
+              <datalist id="teams-list">
+                {uniqueTeams.map(t => <option key={t} value={t} />)}
+              </datalist>
             </div>
             
             <div>
               <label className={labelClasses}>Position</label>
-              <input required type="text" name="position" value={formData.position} onChange={handleChange} className={inputClasses} placeholder="FWD" />
+              <input required type="text" list="positions-list" name="position" value={formData.position} onChange={handleChange} className={inputClasses} placeholder="FWD" />
+              <datalist id="positions-list">
+                {uniquePositions.map(p => <option key={p} value={p} />)}
+              </datalist>
             </div>
             <div>
               <label className={labelClasses}>Year</label>
-              <input required type="number" name="year" value={formData.year} onChange={handleChange} className={inputClasses} placeholder="2024" />
+              <input required type="number" list="years-list" name="year" value={formData.year} onChange={handleChange} className={inputClasses} placeholder="2024" />
+              <datalist id="years-list">
+                {uniqueYears.map(y => <option key={y} value={y} />)}
+              </datalist>
             </div>
-
             <div>
               <label className={labelClasses}>Set / Brand</label>
-              <input required type="text" name="set" value={formData.set} onChange={handleChange} className={inputClasses} placeholder="TOPPS CHROME" />
+              <input required type="text" list="sets-list" name="set" value={formData.set} onChange={handleChange} className={inputClasses} placeholder="TOPPS CHROME" />
+              <datalist id="sets-list">
+                {uniqueSets.map(s => <option key={s} value={s} />)}
+              </datalist>
             </div>
             <div>
               <label className={labelClasses}>Card Number</label>
-              <input required type="text" name="cardNumber" value={formData.cardNumber} onChange={handleChange} className={inputClasses} placeholder="TC-LM" />
+              <input required type="text" list="cardNumbers-list" name="cardNumber" value={formData.cardNumber} onChange={handleChange} className={inputClasses} placeholder="TC-LM" />
+              <datalist id="cardNumbers-list">
+                {uniqueCardNumbers.map(c => <option key={c} value={c} />)}
+              </datalist>
             </div>
             
             <div>
               <label className={labelClasses}>Edition</label>
-              <input required type="text" name="edition" value={formData.edition} onChange={handleChange} className={inputClasses} placeholder="1st Edition" />
+              <input required type="text" list="editions-list" name="edition" value={formData.edition} onChange={handleChange} className={inputClasses} placeholder="1st Edition" />
+              <datalist id="editions-list">
+                {uniqueEditions.map(e => <option key={e} value={e} />)}
+              </datalist>
             </div>
             <div>
               <label className={labelClasses}>Rarity</label>

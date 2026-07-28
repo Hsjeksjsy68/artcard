@@ -308,7 +308,7 @@ export default function App() {
         {activeTab === 'admin' ? (
           (user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com' || user?.email === '1@1.com') ? (
             <div className="max-w-2xl mx-auto space-y-8">
-              <AdminForm onAdd={handleAddCard} totalCards={cards.filter(c => !!c.imageUrl).length} totalMarketCap={totalMarketCap} />
+              <AdminForm onAdd={handleAddCard} totalCards={cards.filter(c => !!c.imageUrl).length} totalMarketCap={totalMarketCap} existingCards={cards} />
             </div>
           ) : (
             <div className="text-center py-20 font-black tracking-widest text-neutral-500 uppercase">

@@ -9,6 +9,9 @@ export function CustomCard({ themes }: { themes: any[] }) {
   });
   
   const [imageUrl, setImageUrl] = useState<string>('');
+  const [imageScale, setImageScale] = useState(1);
+  const [imageOffsetX, setImageOffsetX] = useState(0);
+  const [imageOffsetY, setImageOffsetY] = useState(0);
   const [userClubLogoUrl, setUserClubLogoUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const clubLogoInputRef = useRef<HTMLInputElement>(null);
@@ -131,6 +134,47 @@ export function CustomCard({ themes }: { themes: any[] }) {
                   className="hidden" 
                 />
               </div>
+              
+              {imageUrl && (
+                <div className="mt-4 space-y-4 bg-neutral-50 p-4 border-2 border-black">
+                  <div className="flex justify-between items-center mb-2 border-b-2 border-black pb-2">
+                    <span className="text-sm font-black uppercase tracking-widest">Adjust Image</span>
+                    <button 
+                      onClick={() => { setImageScale(1); setImageOffsetX(0); setImageOffsetY(0); }}
+                      className="text-xs font-black uppercase tracking-widest bg-black text-white px-3 py-1 hover:bg-[#D4FF00] hover:text-black transition-colors"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-neutral-500">Zoom</label>
+                      <input type="number" step="0.05" min="0.5" max="3" value={imageScale} onChange={e => setImageScale(Number(e.target.value))} className="w-16 bg-white border-2 border-black p-1 text-xs font-black text-center focus:outline-none focus:border-[#D4FF00]" />
+                    </div>
+                    <input type="range" min="0.5" max="3" step="0.05" value={imageScale} onChange={e => setImageScale(Number(e.target.value))} className="w-full accent-black" />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-neutral-500">Horizontal</label>
+                      <input type="number" value={imageOffsetX} onChange={e => setImageOffsetX(Number(e.target.value))} className="w-16 bg-white border-2 border-black p-1 text-xs font-black text-center focus:outline-none focus:border-[#D4FF00]" />
+                    </div>
+                    <div className="relative">
+                      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-3 bg-neutral-300 pointer-events-none z-0"></div>
+                      <input type="range" min="-400" max="400" value={imageOffsetX} onChange={e => setImageOffsetX(Number(e.target.value))} className="w-full accent-black relative z-10 bg-transparent" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-neutral-500">Vertical</label>
+                      <input type="number" value={imageOffsetY} onChange={e => setImageOffsetY(Number(e.target.value))} className="w-16 bg-white border-2 border-black p-1 text-xs font-black text-center focus:outline-none focus:border-[#D4FF00]" />
+                    </div>
+                    <div className="relative">
+                      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-3 bg-neutral-300 pointer-events-none z-0"></div>
+                      <input type="range" min="-400" max="400" value={imageOffsetY} onChange={e => setImageOffsetY(Number(e.target.value))} className="w-full accent-black relative z-10 bg-transparent" />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -201,7 +245,16 @@ export function CustomCard({ themes }: { themes: any[] }) {
               <div ref={cardRef} className="relative aspect-[750/1050] bg-white border-2 border-black overflow-hidden flex flex-col">
                 {/* User Photo (Background) */}
                 {imageUrl && (
-                  <img src={imageUrl} className="absolute inset-0 w-full h-full object-cover z-0" />
+                  <img 
+                    src={imageUrl} 
+                    className="absolute z-0 max-w-none" 
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      transform: `translate(${imageOffsetX}px, ${imageOffsetY}px) scale(${imageScale})`
+                    }}
+                  />
                 )}
                 
                 {/* Theme Overlay */}

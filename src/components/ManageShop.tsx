@@ -236,6 +236,8 @@ export function ManageShop({ cards, packs, themes }: ManageShopProps) {
       fontColor: '#ffffff',
       fontSize: 48,
       fontPositionBottom: 5,
+      fontScaleX: 1,
+      fontScaleY: 1,
     };
     setEditingTheme(newTheme);
     setThemeEditForm(newTheme);
@@ -809,7 +811,17 @@ export function ManageShop({ cards, packs, themes }: ManageShopProps) {
                   <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Font Size</label>
                   <input type="number" name="fontSize" value={themeEditForm.fontSize || 48} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, fontSize: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-3 text-sm font-bold focus:outline-none focus:bg-white mb-2" />
                   <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Font Position (Bottom %)</label>
-                  <input type="number" name="fontPositionBottom" value={themeEditForm.fontPositionBottom ?? 5} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, fontPositionBottom: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-3 text-sm font-bold focus:outline-none focus:bg-white" />
+                  <input type="number" name="fontPositionBottom" value={themeEditForm.fontPositionBottom ?? 5} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, fontPositionBottom: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-3 text-sm font-bold focus:outline-none focus:bg-white mb-2" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Stretch X (1.0 = normal)</label>
+                      <input type="number" step="0.1" name="fontScaleX" value={themeEditForm.fontScaleX ?? 1} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, fontScaleX: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-3 text-sm font-bold focus:outline-none focus:bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Stretch Y (1.0 = normal)</label>
+                      <input type="number" step="0.1" name="fontScaleY" value={themeEditForm.fontScaleY ?? 1} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, fontScaleY: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-3 text-sm font-bold focus:outline-none focus:bg-white" />
+                    </div>
+                  </div>
                 </div>
               </div>
               

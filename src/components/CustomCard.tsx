@@ -246,7 +246,9 @@ export function CustomCard({ themes }: { themes: any[] }) {
                     style={{ 
                       fontFamily: selectedTheme?.fontName ? `'${selectedTheme.fontName}', sans-serif` : 'inherit',
                       color: selectedTheme?.fontColor || '#ffffff',
-                      fontSize: selectedTheme?.fontSize ? `${selectedTheme.fontSize}px` : '24px'
+                      fontSize: selectedTheme?.fontSize ? `${selectedTheme.fontSize}px` : '24px',
+                      transform: `scaleX(${selectedTheme?.fontScaleX ?? 1}) scaleY(${selectedTheme?.fontScaleY ?? 1})`,
+                      transformOrigin: 'bottom center'
                     }}
                     className="uppercase whitespace-nowrap"
                   >

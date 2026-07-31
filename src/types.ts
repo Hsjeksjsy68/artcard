@@ -31,6 +31,8 @@ export interface CardTheme {
   fontColor?: string;
   fontSize?: number;
   fontPositionBottom?: number;
+  fontScaleX?: number;
+  fontScaleY?: number;
 }
 
 export interface FootballCard {

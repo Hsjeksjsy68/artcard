@@ -7,12 +7,13 @@ import { AdminForm } from './components/AdminForm';
 import { ManageShop } from './components/ManageShop';
 import { PackShop } from './components/PackShop';
 import { UserAuth } from './components/UserAuth';
+import { CustomCard } from './components/CustomCard';
 import { FootballCard, Pack } from './types';
 import { formatCurrency } from './lib/utils';
 import { db, auth, onAuthStateChanged, collection, doc, setDoc, getDoc, User, deleteDoc, onSnapshot, getDocs } from './lib/firebase';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'database' | 'collection' | 'admin' | 'manage' | 'shop'>('database');
+  const [activeTab, setActiveTab] = useState<'database' | 'collection' | 'admin' | 'manage' | 'shop' | 'custom'>('database');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
   const [filterPosition, setFilterPosition] = useState('');
@@ -25,6 +26,7 @@ export default function App() {
   const [cards, setCards] = useState<FootballCard[]>([]);
   const [loadingCards, setLoadingCards] = useState(true);
   const [packs, setPacks] = useState<Pack[]>([]);
+  const [themes, setThemes] = useState<any[]>([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -73,9 +75,21 @@ export default function App() {
       console.error("Error fetching packs:", error);
     });
 
+    const themesRef = collection(db, 'themes');
+    const unsubscribeThemes = onSnapshot(themesRef, (snapshot) => {
+      const loadedThemes: any[] = [];
+      snapshot.forEach(doc => {
+        loadedThemes.push({ id: doc.id, ...doc.data() });
+      });
+      setThemes(loadedThemes);
+    }, (error) => {
+      console.error("Error fetching themes:", error);
+    });
+
     return () => {
       unsubscribeCards();
       unsubscribePacks();
+      unsubscribeThemes();
     };
   }, []);
 
@@ -221,6 +235,14 @@ export default function App() {
               >
                 SHOP
               </button>
+              <button 
+                onClick={() => setActiveTab('custom')}
+                className={`transition-colors py-2 border-b-4 ${
+                  activeTab === 'custom' ? 'text-black border-black' : 'border-transparent hover:text-black hover:border-black'
+                }`}
+              >
+                CUSTOM CARD
+              </button>
               {(user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com' || user?.email === '1@1.com') && (
                 <>
                   <button 
@@ -283,6 +305,14 @@ export default function App() {
           >
             SHOP
           </button>
+          <button 
+            onClick={() => setActiveTab('custom')}
+            className={`flex-1 py-3 px-4 text-sm font-black tracking-widest transition-colors uppercase whitespace-nowrap ${
+              activeTab === 'custom' ? 'bg-white text-black border-2 border-black' : 'text-neutral-500 border-2 border-transparent'
+            }`}
+          >
+            CUSTOM CARD
+          </button>
           {(user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com' || user?.email === '1@1.com') && (
             <>
               <button 
@@ -317,7 +347,7 @@ export default function App() {
           )
         ) : activeTab === 'manage' ? (
           (user?.email === 'grakibg@gmail.com' || user?.email === 'wwwrakibcom071@gmail.com' || user?.email === '1@1.com') ? (
-            <ManageShop cards={cards} packs={packs} />
+            <ManageShop cards={cards} packs={packs} themes={themes} />
           ) : (
             <div className="text-center py-20 font-black tracking-widest text-neutral-500 uppercase">
                Access Denied
@@ -325,6 +355,8 @@ export default function App() {
           )
         ) : activeTab === 'shop' ? (
           <PackShop cards={cards} packs={packs} onCardsDrawn={handleCardsDrawn} />
+        ) : activeTab === 'custom' ? (
+          <CustomCard themes={themes} />
         ) : (
           <>
             {/* Search and Filters */}

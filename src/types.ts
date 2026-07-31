@@ -14,6 +14,25 @@ export interface Pack {
   coverPhotoUrl?: string;
 }
 
+export interface CardTheme {
+  id: string;
+  name: string;
+  overlayImageUrl: string;
+  clubLogoUrl?: string;
+  clubLogoSize?: number;
+  clubLogoTop?: number;
+  clubLogoLeft?: number;
+  editionLogoUrl?: string;
+  editionLogoSize?: number;
+  editionLogoTop?: number;
+  editionLogoLeft?: number;
+  fontBase64?: string;
+  fontName?: string;
+  fontColor?: string;
+  fontSize?: number;
+  fontPositionBottom?: number;
+}
+
 export interface FootballCard {
   id: string;
   player: string;

@@ -8,10 +8,11 @@ import { cardsDatabase } from '../data';
 interface ManageShopProps {
   cards: FootballCard[];
   packs: Pack[];
+  themes: any[];
 }
 
-export function ManageShop({ cards, packs }: ManageShopProps) {
-  const [activeTab, setActiveTab] = useState<'cards' | 'packs'>('cards');
+export function ManageShop({ cards, packs, themes }: ManageShopProps) {
+  const [activeTab, setActiveTab] = useState<'cards' | 'packs' | 'themes'>('cards');
   
   // Cards State
   const [editingCard, setEditingCard] = useState<FootballCard | null>(null);
@@ -28,6 +29,10 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
   // Packs State
   const [editingPack, setEditingPack] = useState<Pack | null>(null);
   const [packEditForm, setPackEditForm] = useState<Partial<Pack>>({});
+  
+  // Themes State
+  const [editingTheme, setEditingTheme] = useState<any | null>(null);
+  const [themeEditForm, setThemeEditForm] = useState<any>({});
   
   const [confirmReset, setConfirmReset] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -207,6 +212,77 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
     }
   };
 
+  // Theme Handlers
+  const handleEditTheme = (theme: any) => {
+    setEditingTheme(theme);
+    setThemeEditForm(theme);
+  };
+
+  const handleCreateTheme = () => {
+    const newTheme = {
+      id: `theme_${Date.now()}`,
+      name: 'NEW THEME',
+      overlayImageUrl: '',
+      clubLogoUrl: '',
+      clubLogoSize: 80,
+      clubLogoTop: 6,
+      clubLogoLeft: 6,
+      editionLogoUrl: '',
+      editionLogoSize: 80,
+      editionLogoTop: 6,
+      editionLogoLeft: 80,
+      fontBase64: '',
+      fontName: 'CustomFont',
+      fontColor: '#ffffff',
+      fontSize: 48,
+      fontPositionBottom: 5,
+    };
+    setEditingTheme(newTheme);
+    setThemeEditForm(newTheme);
+  };
+
+  const handleSaveTheme = async () => {
+    if (!editingTheme) return;
+    setIsSaving(true);
+    try {
+      const themeRef = doc(db, "themes", editingTheme.id);
+      await setDoc(themeRef, themeEditForm, { merge: true });
+      setEditingTheme(null);
+    } catch (error) {
+      console.error("Error updating theme:", error);
+      alert("Failed to update theme.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteTheme = async (theme: any) => {
+    if (window.confirm(`Are you sure you want to delete ${theme.name}?`)) {
+      try {
+        await deleteDoc(doc(db, "themes", theme.id));
+      } catch (error) {
+        console.error("Error deleting theme:", error);
+        alert("Failed to delete theme.");
+      }
+    }
+  };
+
+  const handleChangeTheme = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setThemeEditForm((prev: any) => ({ ...prev, [name]: value }));
+  };
+
+  const handleThemeImageChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThemeEditForm((prev: any) => ({ ...prev, [fieldName]: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleResetDatabase = async () => {
     if (!confirmReset) {
       setConfirmReset(true);
@@ -292,6 +368,14 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
               }`}
             >
               Physical Packs
+            </button>
+            <button
+              onClick={() => setActiveTab('themes')}
+              className={`px-6 py-2 font-black uppercase tracking-widest border-2 border-black transition-colors ${
+                activeTab === 'themes' ? 'bg-black text-white' : 'bg-white text-black hover:bg-neutral-100'
+              }`}
+            >
+              Themes
             </button>
           </div>
         </div>
@@ -459,6 +543,54 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
             </div>
           </div>
         )}
+        {activeTab === 'themes' && (
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+              <h3 className="text-xl font-black uppercase tracking-widest">Custom Card Themes</h3>
+              <button 
+                onClick={handleCreateTheme}
+                className="flex items-center gap-2 bg-black text-white px-4 py-2 font-black uppercase tracking-widest hover:bg-[#D4FF00] hover:text-black transition-colors"
+              >
+                <Plus size={16} /> New Theme
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {themes.map(theme => (
+                <div key={theme.id} className="border-2 border-black p-4 flex flex-col items-center text-center bg-white">
+                  {theme.overlayImageUrl ? (
+                    <img src={theme.overlayImageUrl} alt={theme.name} className="w-32 aspect-[750/1050] object-contain border-2 border-black mb-4 bg-neutral-100" />
+                  ) : (
+                    <div className="w-32 aspect-[750/1050] bg-neutral-200 border-2 border-black mb-4 flex items-center justify-center">
+                      <ImageIcon size={32} className="text-neutral-400" />
+                    </div>
+                  )}
+                  <h4 className="text-xl font-black uppercase tracking-tighter mb-4">{theme.name}</h4>
+                  
+                  <div className="flex gap-2 w-full mt-auto">
+                    <button 
+                      onClick={() => handleEditTheme(theme)}
+                      className="flex-1 flex justify-center p-2 border-2 border-black bg-white text-black hover:bg-[#D4FF00] transition-colors"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteTheme(theme)}
+                      className="flex-1 flex justify-center p-2 border-2 border-black bg-white text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {themes.length === 0 && (
+                <div className="col-span-full py-12 text-center text-neutral-500 font-bold uppercase tracking-widest">
+                  No themes found. Create one to get started.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Card Modal */}
@@ -583,6 +715,110 @@ export function ManageShop({ cards, packs }: ManageShopProps) {
                 className="w-full flex items-center justify-center gap-2 bg-[#D4FF00] hover:bg-black hover:text-white text-black border-2 border-black py-4 font-black uppercase tracking-widest transition-colors"
               >
                 {isSaving ? 'Saving...' : <><Check size={20} /> Save Pack</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Edit Theme Modal */}
+      {editingTheme && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-xl border-4 border-black relative max-h-[90vh] overflow-y-auto">
+            <button 
+              onClick={() => setEditingTheme(null)}
+              className="absolute top-4 right-4 bg-black text-white w-8 h-8 flex items-center justify-center hover:bg-[#D4FF00] hover:text-black transition-colors"
+            >
+              <X size={20} />
+            </button>
+            <div className="p-8 space-y-6">
+              <h2 className="text-2xl font-black uppercase tracking-tighter">Edit Theme</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Theme Name</label>
+                  <input type="text" name="name" value={themeEditForm.name || ''} onChange={handleChangeTheme} className="w-full bg-neutral-100 border-2 border-black p-3 text-sm font-bold focus:outline-none focus:bg-white" />
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Overlay Image (Transparent PNG)</label>
+                  <div className="flex flex-col gap-2">
+                    {themeEditForm.overlayImageUrl && (
+                      <img src={themeEditForm.overlayImageUrl} alt="Overlay" className="h-24 object-contain border-2 border-black bg-neutral-100" />
+                    )}
+                    <input type="file" accept="image/png" onChange={(e) => handleThemeImageChange(e, 'overlayImageUrl')} className="w-full" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Club Logo</label>
+                  <div className="flex flex-col gap-2 mb-4">
+                    {themeEditForm.clubLogoUrl && (
+                      <img src={themeEditForm.clubLogoUrl} alt="Club Logo" className="h-16 object-contain border-2 border-black bg-neutral-100" />
+                    )}
+                    <input type="file" accept="image/*" onChange={(e) => handleThemeImageChange(e, 'clubLogoUrl')} className="w-full" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-xs font-black text-neutral-500 mb-1">Size (px)</label>
+                      <input type="number" name="clubLogoSize" value={themeEditForm.clubLogoSize ?? 80} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, clubLogoSize: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-2 text-sm font-bold focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-neutral-500 mb-1">Top (%)</label>
+                      <input type="number" name="clubLogoTop" value={themeEditForm.clubLogoTop ?? 6} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, clubLogoTop: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-2 text-sm font-bold focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-neutral-500 mb-1">Left (%)</label>
+                      <input type="number" name="clubLogoLeft" value={themeEditForm.clubLogoLeft ?? 6} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, clubLogoLeft: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-2 text-sm font-bold focus:outline-none" />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Edition Logo</label>
+                  <div className="flex flex-col gap-2 mb-4">
+                    {themeEditForm.editionLogoUrl && (
+                      <img src={themeEditForm.editionLogoUrl} alt="Edition Logo" className="h-16 object-contain border-2 border-black bg-neutral-100" />
+                    )}
+                    <input type="file" accept="image/*" onChange={(e) => handleThemeImageChange(e, 'editionLogoUrl')} className="w-full" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-xs font-black text-neutral-500 mb-1">Size (px)</label>
+                      <input type="number" name="editionLogoSize" value={themeEditForm.editionLogoSize ?? 80} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, editionLogoSize: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-2 text-sm font-bold focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-neutral-500 mb-1">Top (%)</label>
+                      <input type="number" name="editionLogoTop" value={themeEditForm.editionLogoTop ?? 6} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, editionLogoTop: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-2 text-sm font-bold focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-neutral-500 mb-1">Left (%)</label>
+                      <input type="number" name="editionLogoLeft" value={themeEditForm.editionLogoLeft ?? 80} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, editionLogoLeft: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-2 text-sm font-bold focus:outline-none" />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Font File (.ttf, .woff, .woff2)</label>
+                  <input type="file" accept=".ttf,.woff,.woff2,font/*" onChange={(e) => handleThemeImageChange(e, 'fontBase64')} className="w-full mb-2" />
+                  <input type="text" name="fontName" value={themeEditForm.fontName || ''} onChange={handleChangeTheme} placeholder="Font Name (e.g. MyCustomFont)" className="w-full bg-neutral-100 border-2 border-black p-3 text-sm font-bold focus:outline-none focus:bg-white mb-2" />
+                  <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Font Color</label>
+                  <div className="flex gap-2 items-center mb-2">
+                    <input type="color" name="fontColor" value={themeEditForm.fontColor || '#ffffff'} onChange={handleChangeTheme} className="w-12 h-12 p-1 bg-neutral-100 border-2 border-black cursor-pointer" />
+                    <input type="text" name="fontColor" value={themeEditForm.fontColor || '#ffffff'} onChange={handleChangeTheme} placeholder="e.g. #ffffff" className="flex-1 bg-neutral-100 border-2 border-black p-3 text-sm font-bold focus:outline-none focus:bg-white" />
+                  </div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Font Size</label>
+                  <input type="number" name="fontSize" value={themeEditForm.fontSize || 48} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, fontSize: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-3 text-sm font-bold focus:outline-none focus:bg-white mb-2" />
+                  <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Font Position (Bottom %)</label>
+                  <input type="number" name="fontPositionBottom" value={themeEditForm.fontPositionBottom ?? 5} onChange={(e) => setThemeEditForm((prev: any) => ({ ...prev, fontPositionBottom: Number(e.target.value) }))} className="w-full bg-neutral-100 border-2 border-black p-3 text-sm font-bold focus:outline-none focus:bg-white" />
+                </div>
+              </div>
+              
+              <button 
+                onClick={handleSaveTheme}
+                disabled={isSaving}
+                className="w-full flex items-center justify-center gap-2 bg-[#D4FF00] hover:bg-black hover:text-white text-black border-2 border-black py-4 font-black uppercase tracking-widest transition-colors"
+              >
+                {isSaving ? 'Saving...' : <><Check size={20} /> Save Theme</>}
               </button>
             </div>
           </div>
